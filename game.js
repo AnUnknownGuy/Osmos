@@ -167,17 +167,15 @@ class Player extends RoundEntity{
 
         this.speed.add(Math.cos(angle)*(1/scale),-Math.sin(angle)*(1/scale));
 
+        let area = this.size * this.size * Math.PI;
 
-        let area = this.size * this.size * Math.PI * 0.02;
-
-
-        let size = Math.sqrt(area/Math.PI);
-
+        let size = Math.sqrt((area*0.02)/Math.PI);
 
         let pos = new Vector(this.pos.x + -Math.cos(angle) * (this.size + size), this.pos.y + Math.sin(angle) * (this.size + size));
 
+        this.size = Math.sqrt((area*0.98)/Math.PI);
 
-        objects.push(new RoundEntity(pos, size, new Vector(-Math.cos(angle), Math.sin(angle))));
+        objects.push(new RoundEntity(pos, size, new Vector(-Math.cos(angle) + this.speed.x, Math.sin(angle) + this.speed.y)));
 
 
     }
