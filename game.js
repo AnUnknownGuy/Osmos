@@ -69,6 +69,7 @@ let camera = new Vector(0,0);
 let center = new Vector(500,500);
 let playerSize = 1;
 let scale = 1;
+let objects = [];
 
 
 class AbstractEntity{
@@ -153,12 +154,32 @@ class Player extends RoundEntity{
     }
 
     update(){
-        let angle = Math.atan2(-(center.y -Mouse.y), (center.x -Mouse.x));
-        if(Mouse.down()){
 
-            this.speed.add(Math.cos(angle)*(1/scale),-Math.sin(angle)*(1/scale));
+        if(Mouse.down()){
+            this.shoot();
         }
         super.update();
+    }
+
+    shoot(){
+
+        let angle = Math.atan2(-(center.y -Mouse.y), (center.x -Mouse.x));
+
+        this.speed.add(Math.cos(angle)*(1/scale),-Math.sin(angle)*(1/scale));
+
+
+        let area = this.size * this.size * Math.PI * 0.02;
+
+
+        let size = Math.sqrt(area/Math.PI);
+
+
+        let pos = new Vector(this.pos.x + -Math.cos(angle) * (this.size + size), this.pos.y + Math.sin(angle) * (this.size + size));
+
+
+        objects.push(new RoundEntity(pos, size, new Vector(-Math.cos(angle), Math.sin(angle))));
+
+
     }
 }
 
@@ -196,9 +217,8 @@ class Circle extends AbstractShape{
             }
             //console.log(r,b);
 
-            let colorString = "rgb(" + r + ",0," + b + ")";
 
-            ctx.strokeStyle = colorString;
+            ctx.strokeStyle = "rgb(" + r + ",0," + b + ")";
             ctx.beginPath();
             ctx.arc((pos.x*scale + camera.x), (pos.y*scale + camera.y), size*scale, 0, 2 * Math.PI);
             ctx.stroke();
@@ -215,19 +235,19 @@ class Game{
 
 
     start(){
-        this.objects.push(new Player());
-        this.objects.push(new RoundEntity(new Vector(600, 400),20, new Vector(0,0)));
-        this.objects.push(new RoundEntity(new Vector(100, 400),40, new Vector(0,0)));
-        this.objects.push(new RoundEntity(new Vector(50, 500),20, new Vector(3,0)));
-        this.objects.push(new RoundEntity(new Vector(200, 800),58, new Vector(0,0)));
-        this.objects.push(new RoundEntity(new Vector(600, 800),53, new Vector(0,0)));
+        objects.push(new Player());
+        objects.push(new RoundEntity(new Vector(600, 400),20, new Vector(0,0)));
+        objects.push(new RoundEntity(new Vector(100, 400),40, new Vector(0,0)));
+        objects.push(new RoundEntity(new Vector(50, 500),20, new Vector(3,0)));
+        objects.push(new RoundEntity(new Vector(200, 800),58, new Vector(0,0)));
+        objects.push(new RoundEntity(new Vector(600, 800),53, new Vector(0,0)));
     }
 
     update(){
         Mouse.update();
         ctx.clearRect(0, 0, c.width, c.height);
 
-        for (let obj of this.objects) {
+        for (let obj of objects) {
             obj.update();
 
             if(obj instanceof Player){
@@ -239,7 +259,7 @@ class Game{
 
             }
 
-            for (let obj2 of this.objects) {
+            for (let obj2 of objects) {
                 if(obj.size >= obj2.size && obj !== obj2){
                     if(obj.overlap(obj2)){
                         obj.absorb(obj2);
@@ -248,7 +268,7 @@ class Game{
             }
         }
 
-        this.objects = this.objects.filter(function (obj) {
+        objects = objects.filter(function (obj) {
             return obj.alive;
         });
 
@@ -267,7 +287,7 @@ class Game{
 
         });*/
 
-        this.objects.forEach(function (obj) {
+        objects.forEach(function (obj) {
             obj.draw();
         })
     }
