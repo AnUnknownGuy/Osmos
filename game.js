@@ -178,6 +178,7 @@ class Game{
     start(){
         this.objects.push(new Player());
         this.objects.push(new RoundEntity(new Vector(600, 400),20, new Vector(0,0)));
+        this.objects.push(new RoundEntity(new Vector(600, 800),60, new Vector(0,0)));
     }
     update(){
         Mouse.update();
