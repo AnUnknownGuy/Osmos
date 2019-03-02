@@ -178,7 +178,7 @@ class Game{
     start(){
         this.objects.push(new Player());
         this.objects.push(new RoundEntity(new Vector(600, 400),20, new Vector(0,0)));
-        this.objects.push(new RoundEntity(new Vector(600, 800),60, new Vector(0,0)));
+        this.objects.push(new RoundEntity(new Vector(600, 800),53, new Vector(0,0)));
     }
     update(){
         Mouse.update();
@@ -188,7 +188,7 @@ class Game{
             obj.update();
 
             for (let obj2 of this.objects) {
-                if(obj.size > obj2.size){
+                if(obj.size >= obj2.size && obj !== obj2){
                     if(obj.overlap(obj2)){
                         obj.absorb(obj2);
                     }
