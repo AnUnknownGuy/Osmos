@@ -1,6 +1,7 @@
 // Vector class, with various useful methods
 const c = document.getElementById("canvas");
 const ctx = c.getContext("2d");
+
 class Vector {
     constructor(x, y) {
         [x, y] = Vector.params(x, y);
@@ -63,6 +64,11 @@ class Vector {
     }
 }
 
+let camera = new Vector(0,0);
+let center = new Vector(500,500);
+let scale = 1;
+
+
 class AbstractEntity{
     constructor(pos, size, shape, speed = new Vector(0, 0), angle=0, angleSpeed=0){
 
@@ -93,9 +99,7 @@ class AbstractEntity{
         if(entity.size < 0 || this.size < 0)
             return false;
 
-        //console.log("ici");
         let dist = Math.sqrt((this.pos.x-entity.pos.x)*(this.pos.x-entity.pos.x)+(this.pos.y-entity.pos.y)*(this.pos.y-entity.pos.y));
-        //console.log(dist);
         return this.size+entity.size > dist;
     }
 
@@ -116,7 +120,7 @@ class AbstractEntity{
         let dist = Math.sqrt((this.pos.x-entity.pos.x)*(this.pos.x-entity.pos.x)+(this.pos.y-entity.pos.y)*(this.pos.y-entity.pos.y));
         let distOverlap = -dist + this.size + entity.size;
 
-        let lit =entity.size-distOverlap;
+        let lit = entity.size-distOverlap;
         let area = entity.size*entity.size*Math.PI - lit*lit*Math.PI;
 
         this.addArea(area);
@@ -133,15 +137,16 @@ class RoundEntity extends AbstractEntity{
 
 class Player extends RoundEntity{
     constructor(pos = new Vector(300, 500)){
-        super(pos, 50);
+        super(pos, 40);
     }
 
     update(){
-        let angle = Math.atan2(-(this.pos.y-Mouse.y), (this.pos.x-Mouse.x));
+        let angle = Math.atan2(-(center.y -Mouse.y), (center.x -Mouse.x));
         //console.log(angle);
         if(Mouse.down()){
 
-            this.speed.add(Math.cos(angle)*0.5,-Math.sin(angle)*0.5);
+            console.log(scale);
+            this.speed.add(Math.cos(angle)*(2/scale),-Math.sin(angle)*(2/scale));
         }
         super.update();
     }
@@ -164,7 +169,7 @@ class Circle extends AbstractShape{
     constructor(){
         super(function(pos, size, color, angle){
             ctx.beginPath();
-            ctx.arc(pos.x, pos.y, size, 0, 2 * Math.PI);
+            ctx.arc((pos.x*scale + camera.x), (pos.y*scale + camera.y), size*scale, 0, 2 * Math.PI);
             ctx.stroke();
         });
     }
@@ -175,17 +180,30 @@ class Game{
         this.objects = [];
     }
 
+
+
     start(){
         this.objects.push(new Player());
         this.objects.push(new RoundEntity(new Vector(600, 400),20, new Vector(0,0)));
+        this.objects.push(new RoundEntity(new Vector(100, 400),40, new Vector(0,0)));
+        this.objects.push(new RoundEntity(new Vector(200, 800),58, new Vector(0,0)));
         this.objects.push(new RoundEntity(new Vector(600, 800),53, new Vector(0,0)));
     }
+
     update(){
         Mouse.update();
         ctx.clearRect(0, 0, c.width, c.height);
 
         for (let obj of this.objects) {
             obj.update();
+
+            if(obj instanceof Player){
+
+                if((obj.size) > 15)
+                    scale = 50 / (obj.size);
+                camera = new Vector((center.x -obj.pos.x*scale), (center.y - obj.pos.y*scale));
+
+            }
 
             for (let obj2 of this.objects) {
                 if(obj.size >= obj2.size && obj !== obj2){
