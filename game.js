@@ -1,6 +1,7 @@
 // Vector class, with various useful methods
 const c = document.getElementById("canvas");
 const ctx = c.getContext("2d");
+ctx.lineWidth = 4;
 
 class Vector {
     constructor(x, y) {
@@ -66,6 +67,7 @@ class Vector {
 
 let camera = new Vector(0,0);
 let center = new Vector(500,500);
+let playerSize = 1;
 let scale = 1;
 
 
@@ -103,8 +105,18 @@ class AbstractEntity{
         return this.size+entity.size > dist;
     }
 
-    addArea(area){
+    addArea(area, speed){
+
         let newArea = this.size * this.size * Math.PI + area;
+        let ratio = area/(this.size * this.size * Math.PI);
+
+        let newSpeed = new Vector();
+
+        newSpeed.x = (this.size * this.size * Math.PI * this.speed.x + speed.x * area)/ newArea;
+        newSpeed.y = (this.size * this.size * Math.PI * this.speed.y + speed.y * area) / newArea ;
+
+        this.speed = newSpeed;
+
         this.size = Math.sqrt(newArea/Math.PI);
     }
 
@@ -123,7 +135,7 @@ class AbstractEntity{
         let lit = entity.size-distOverlap;
         let area = entity.size*entity.size*Math.PI - lit*lit*Math.PI;
 
-        this.addArea(area);
+        this.addArea(area, entity.speed);
         entity.decreaseSize(distOverlap);
 
     }
@@ -142,11 +154,9 @@ class Player extends RoundEntity{
 
     update(){
         let angle = Math.atan2(-(center.y -Mouse.y), (center.x -Mouse.x));
-        //console.log(angle);
         if(Mouse.down()){
 
-            console.log(scale);
-            this.speed.add(Math.cos(angle)*(2/scale),-Math.sin(angle)*(2/scale));
+            this.speed.add(Math.cos(angle)*(1/scale),-Math.sin(angle)*(1/scale));
         }
         super.update();
     }
@@ -168,9 +178,31 @@ class AbstractShape{
 class Circle extends AbstractShape{
     constructor(){
         super(function(pos, size, color, angle){
+            let r,b;
+
+            let dif = size-playerSize;
+            if (dif<0)
+                dif=-dif;
+
+            if(size === playerSize){
+                r = 0;
+                b = 0;
+            }else if(size > playerSize){
+                r = 50 + 150* (1-(1/(1+dif)));
+                b = 100 * (1/(1+dif)) ;
+            }else{
+                r = 100 * (1/(1+dif)) ;
+                b = 50 + 150* (1-(1/(1+dif)));
+            }
+            //console.log(r,b);
+
+            let colorString = "rgb(" + r + ",0," + b + ")";
+
+            ctx.strokeStyle = colorString;
             ctx.beginPath();
             ctx.arc((pos.x*scale + camera.x), (pos.y*scale + camera.y), size*scale, 0, 2 * Math.PI);
             ctx.stroke();
+            ctx.strokeStyle = "rgb(0,0,0)";
         });
     }
 }
@@ -186,6 +218,7 @@ class Game{
         this.objects.push(new Player());
         this.objects.push(new RoundEntity(new Vector(600, 400),20, new Vector(0,0)));
         this.objects.push(new RoundEntity(new Vector(100, 400),40, new Vector(0,0)));
+        this.objects.push(new RoundEntity(new Vector(50, 500),20, new Vector(3,0)));
         this.objects.push(new RoundEntity(new Vector(200, 800),58, new Vector(0,0)));
         this.objects.push(new RoundEntity(new Vector(600, 800),53, new Vector(0,0)));
     }
@@ -202,6 +235,7 @@ class Game{
                 if((obj.size) > 15)
                     scale = 50 / (obj.size);
                 camera = new Vector((center.x -obj.pos.x*scale), (center.y - obj.pos.y*scale));
+                playerSize = obj.size;
 
             }
 
