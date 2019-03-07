@@ -71,6 +71,33 @@ let playerSize = 1;
 let scale = 1;
 let objects = [];
 
+class Grille{
+    constructor(size, espacement = 25){
+        this.size = size;
+        this. espacement = espacement;
+    }
+    draw(){
+
+        ctx.lineWidth = 2;
+
+        ctx.strokeStyle = "#111111";
+        ctx.strokeRect(camera.x, camera.y, this.size.x *scale, this.size.y*scale );
+
+        for(let i =0; i < this.size.x;  i += this.espacement){
+            ctx.beginPath();
+            ctx.moveTo(camera.x+i*scale, camera.y);
+            ctx.lineTo(camera.x+i*scale, camera.y+this.size.y*scale);
+            ctx.stroke();
+        }
+
+        for(let i =0; i < this.size.y;  i += this.espacement){
+            ctx.beginPath();
+            ctx.moveTo(camera.x+0, camera.y+i*scale);
+            ctx.lineTo(camera.x+this.size.x*scale, camera.y+i*scale);
+            ctx.stroke();
+        }
+    }
+}
 
 class AbstractEntity{
     constructor(pos, size, shape, speed = new Vector(0, 0), angle=0, angleSpeed=0){
@@ -78,7 +105,6 @@ class AbstractEntity{
         if (new.target === AbstractEntity) {
             throw new TypeError("Cannot construct AbstractEntity instances directly");
         }
-
         this.pos = pos;
         this.size = size;
         this.speed = speed;
@@ -88,9 +114,19 @@ class AbstractEntity{
         this.alive = true;
     }
 
-    update(){
+    update(grille){
         this.pos = this.pos.add(this.speed);
         this.angle += this.angleSpeed;
+
+        if(this.pos.x + this.size > grille.size.x){
+            this.pos = new Vector(grille.size.x*2 -this.pos.x - this.size, this.pos.y);
+            this.speed.x *=-1;
+        }
+
+        if(this.pos.x - this.size < 0){
+            this.pos = new Vector(0 -this.pos.x - this.size, this.pos.y);
+            this.speed.x *=-1;
+        }
     }
 
     draw(){
@@ -143,7 +179,7 @@ class AbstractEntity{
 }
 
 class RoundEntity extends AbstractEntity{
-    constructor(pos, size, speed = new Vector(0, 0)){
+    constructor(pos, size, speed = new Vector(0,0)){
         super(pos, size, new Circle(), speed);
     }
 }
@@ -153,12 +189,12 @@ class Player extends RoundEntity{
         super(pos, 40);
     }
 
-    update(){
+    update(grille){
 
         if(Mouse.down()){
             this.shoot();
         }
-        super.update();
+        super.update(grille);
     }
 
     shoot(){
@@ -196,27 +232,30 @@ class AbstractShape{
 
 class Circle extends AbstractShape{
     constructor(){
-        super(function(pos, size, color, angle){
+        super(function(pos, size, v, angle){
             let r,b;
 
             let dif = size-playerSize;
             if (dif<0)
                 dif=-dif;
 
-            if(size === playerSize){
-                r = 0;
-                b = 0;
-            }else if(size > playerSize){
+            if(size === playerSize) {
+                v = 50;
+            }
+
+
+            if(size >= playerSize){
                 r = 50 + 150* (1-(1/(1+dif)));
-                b = 100 * (1/(1+dif)) ;
+                b = 150 * (1/(1+dif)) ;
             }else{
-                r = 100 * (1/(1+dif)) ;
+                r = 150 * (1/(1+dif)) ;
                 b = 50 + 150* (1-(1/(1+dif)));
             }
             //console.log(r,b);
 
 
-            ctx.strokeStyle = "rgb(" + r + ",0," + b + ")";
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = "rgb(" + r + "," + v + "," + b + ")";
             ctx.beginPath();
             ctx.arc((pos.x*scale + camera.x), (pos.y*scale + camera.y), size*scale, 0, 2 * Math.PI);
             ctx.stroke();
@@ -227,32 +266,37 @@ class Circle extends AbstractShape{
 
 class Game{
     constructor() {
-        this.objects = [];
+        this.grille = new Grille(new Vector(1000,600));
     }
 
 
 
     start(){
         objects.push(new Player());
-        objects.push(new RoundEntity(new Vector(600, 400),20, new Vector(0,0)));
-        objects.push(new RoundEntity(new Vector(100, 400),40, new Vector(0,0)));
-        objects.push(new RoundEntity(new Vector(50, 500),20, new Vector(3,0)));
-        objects.push(new RoundEntity(new Vector(200, 800),58, new Vector(0,0)));
-        objects.push(new RoundEntity(new Vector(600, 800),53, new Vector(0,0)));
+        objects.push(new RoundEntity(new Vector(600, 400),20));
+        objects.push(new RoundEntity(new Vector(100, 400),40));
+        objects.push(new RoundEntity(new Vector(50, 500),20));
+        objects.push(new RoundEntity(new Vector(200, 800),58));
+        objects.push(new RoundEntity(new Vector(600, 800),53));
     }
 
     update(){
         Mouse.update();
-        ctx.clearRect(0, 0, c.width, c.height);
+        ctx.fillStyle = "#000000";
+        ctx.fillRect(0, 0, c.width, c.height);
+        this.grille.draw();
 
         for (let obj of objects) {
-            obj.update();
+
+            obj.update(this.grille);
 
             if(obj instanceof Player){
 
                 if((obj.size) > 15)
-                    scale = 50 / (obj.size);
-                camera = new Vector((center.x -obj.pos.x*scale), (center.y - obj.pos.y*scale));
+                    scale = scale*0.965 + (50 / (obj.size))*0.035;
+                let xaxis = (camera.x*0.5 + (center.x -obj.pos.x*scale)*0.5);
+                let yaxis = (camera.y*0.5 + (center.y - obj.pos.y*scale)*0.5);
+                camera = new Vector(xaxis, yaxis);
                 playerSize = obj.size;
 
             }
@@ -271,10 +315,10 @@ class Game{
         });
 
         /*
-        this.objects.forEach(function (obj) {
+        objects.forEach(function (obj) {
             obj.update();
 
-            this.objects.forEach(function (obj2) {
+            objects.forEach(function (obj2) {
                 if(obj.size > obj2.size){
                     if(obj.overlap(obj2)){
                         obj.absorb(obj2);
