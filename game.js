@@ -119,13 +119,27 @@ class AbstractEntity{
         this.angle += this.angleSpeed;
 
         if(this.pos.x + this.size > grille.size.x){
-            this.pos = new Vector(grille.size.x*2 -this.pos.x - this.size, this.pos.y);
+            this.pos = new Vector(this.pos.x -(this.pos.x + this.size - grille.size.x), this.pos.y);
             this.speed.x *=-1;
+            //console.log("droite");
         }
 
         if(this.pos.x - this.size < 0){
-            this.pos = new Vector(0 -this.pos.x - this.size, this.pos.y);
+            this.pos = new Vector(this.pos.x-(this.pos.x -this.size), this.pos.y);
             this.speed.x *=-1;
+            //console.log("gauche");
+        }
+
+        if(this.pos.y + this.size > grille.size.y){
+            this.pos = new Vector(this.pos.x, this.pos.y -(this.pos.y + this.size - grille.size.y));
+            this.speed.y *=-1;
+            //console.log("haut");
+        }
+
+        if(this.pos.y - this.size < 0){
+            this.pos = new Vector(this.pos.x, this.pos.y-(this.pos.y -this.size));
+            this.speed.y *=-1;
+            //console.log("bas");
         }
     }
 
