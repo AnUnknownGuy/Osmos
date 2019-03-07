@@ -260,9 +260,9 @@ class Circle extends AbstractShape{
 
             if(size >= playerSize){
                 r = 50 + 150* (1-(1/(1+dif)));
-                b = 150 * (1/(1+dif)) ;
+                b = 100 * (1/(1+dif)) ;
             }else{
-                r = 150 * (1/(1+dif)) ;
+                r = 100 * (1/(1+dif)) ;
                 b = 50 + 150* (1-(1/(1+dif)));
             }
             //console.log(r,b);
